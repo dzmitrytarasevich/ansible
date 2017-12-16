@@ -1,0 +1,19 @@
+- name: Install java, tomcat, nginx
+  hosts: hosts
+  user: vagrant
+  become: yes
+
+  roles:
+    - java
+    - tomcat
+    - nginx
+
+- name: Install java_test, tomcat_test, nginx_test
+  hosts: hosts
+  user:	vagrant
+  become: yes
+
+  roles:
+    - java_test
+    - tomcat_test
+    - nginx_test

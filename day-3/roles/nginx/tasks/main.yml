@@ -1,0 +1,41 @@
+- name: Nginx -1- Copy nginx.repo file to remote host
+  template:
+    src: templates/nginx.repo
+    dest: /etc/yum.repos.d/
+  become: true
+
+- name: Nginx -2- Add repository nginx-release (CentOS7)
+  yum: 
+    name: "http://nginx.org/packages/centos/7/x86_64/RPMS/nginx-1.8.1-1.el7.ngx.x86_64.rpm"
+  become: true
+
+- name: Nginx -3- Install nginx
+  yum: 
+    name: nginx 
+    state: present 
+    enablerepo: nginx
+  become: true
+
+- name: Nginx -4- Install nginx.conf
+  template:
+    src: templates/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  become: true
+  notify:
+  - restart_nginx
+
+#- name: Nginx -5- Install nginx.service
+#  template:
+#    src: templates/nginx.service
+#    dest: /etc/systemd/system/nginx.service
+#  become: true
+#  notify:
+#  - restart_nginx
+
+- name: Nginx -5- Start Nginx
+  systemd: 
+    daemon-reload: yes
+    name: nginx 
+    enabled: yes 
+    state: started
+  become: true

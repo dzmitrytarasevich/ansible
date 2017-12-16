@@ -1,0 +1,73 @@
+- name: Tomcat -1- Add group "tomcat_as_group"
+  group:
+    name: "{{tomcat_group}}"
+  become: true
+
+- name: Tomcat -2- Add user "tomcat_as"
+  user:
+    name: "{{tomcat_user}}"
+    group: "{{tomcat_group}}"
+    createhome: no
+  become: true
+
+- name: Tomcat -3- Download Tomcat AS
+  get_url: 
+     url: "{{tomcat_url[tomcat_version]}}"
+     dest: /opt/apache-tomcat-{{tomcat_version}}.tar.gz
+  become: true
+
+- name: Tomcat -4- Create tomcat directory
+  file:
+    path: "/opt/tomcat/{{tomcat_version}}"
+    state: directory
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_group}}"
+    recurse: yes
+  become: true
+
+- name: Tomcat -5- Unpack to /opt/tomcat directory
+  unarchive:
+    src: /opt/apache-tomcat-{{tomcat_version}}.tar.gz
+    dest: "/opt/tomcat/{{tomcat_version}}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+  become: true
+
+- name: Tomcat -6- Install tomcat.service in remote host
+  template:
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_group}}"
+    src: templates/tomcat.service
+    dest: /etc/systemd/system/tomcat.service
+  become: true
+
+- name: Tomcat -7- Change ownership of Tomcat installation
+  file:
+    path: "/opt/tomcat/"
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_group}}"
+    state: directory
+    recurse: yes
+  become: true
+
+- name: Tomcat -8- Symlink log directory
+  file:
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_group}}"
+    src: "{{tomcat_home}}/logs"
+    path: /var/log/tomcat
+    state: link
+  become: true
+
+- name: Tomcat -9- Start Tomcat
+  systemd:
+    daemon-reload: yes
+    name: tomcat
+    enabled: yes
+    state: started
+  become: true
+  notify:
+  - restart_tomcat
+  
+#- name: Tomcat -10- Wait for tomcat to start
+#     wait_for: port={{http_port}}

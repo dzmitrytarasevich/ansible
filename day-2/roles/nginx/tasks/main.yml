@@ -1,0 +1,31 @@
+---
+# tasks file for nginx
+
+  - name: Nginx -1- Copy nginx.repo file to remote host
+    copy:
+      src: "/home/student/cm/ansible/day-2/nginx.repo"
+      dest: "/etc/yum.repos.d/"
+
+  - name: Nginx -2- Add repository nginx-release (CentOS7)
+    yum: 
+      name: "http://nginx.org/packages/centos/7/x86_64/RPMS/nginx-1.8.1-1.el7.ngx.x86_64.rpm"
+
+  - name: Nginx -3- Install nginx
+    yum: 
+      name: nginx 
+      state: present 
+      enablerepo: nginx
+
+  - name: Nginx -4- Install nginx.conf
+    template:
+      src: nginx.conf
+      dest: /etc/nginx/nginx.conf
+#    notify:
+#  - restart nginx
+
+  - name: Nginx -5- Start Nginx
+    systemd: 
+      daemon-reload: yes
+      name: nginx 
+      enabled: yes 
+      state: started

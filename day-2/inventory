@@ -1,0 +1,2 @@
+[hosts]
+day2 ansible_connection=ssh ansible_user=vagrant ansible_port=2200 ansible_ssh_host=127.0.0.1 ansible_ssh_private_key_file=/home/student/cm/ansible/day-2/.vagrant/machines/day2/virtualbox/private_key

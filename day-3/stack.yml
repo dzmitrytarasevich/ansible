@@ -1,0 +1,35 @@
+- name: Provision
+  connection: local
+  hosts: localhost
+
+  tasks:
+
+  - name: Manipulating Vagrant 
+    vmanage:
+      path: "/home/student/cm/ansible/day-3/"
+      state: "started"
+    register: provision
+
+  - name: DEBUG
+    debug:
+      msg: "{{provision}}"
+
+  - name: Adding host
+    add_host:
+      name: day3
+      ansible_connection: "ssh"
+      ansible_user: "{{provision.username}}"
+      ansible_port: "{{provision.port}}"
+      ansible_host: "{{provision.ip_address}}"
+      ansible_ssh_private_key_file: "{{provision.ssh_key}}"
+    when: provision.state == "running"
+
+- name: Install java, tomcat, nginx
+#  hosts: hosts
+#  user: vagrant  
+#  become: yes
+  hosts: day3
+  roles:
+    - java
+    - tomcat
+    - nginx

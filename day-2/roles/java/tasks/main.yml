@@ -1,0 +1,6 @@
+---
+# tasks file for java
+   - name: Java -1- Install Java 1.8.0
+     yum:
+       name: java-{{java_version}}-openjdk
+       state: latest

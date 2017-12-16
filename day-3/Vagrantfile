@@ -1,0 +1,12 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "/home/student/Downloads/centos-7.4-x86_64-minimal.box"
+
+  config.vm.define "day3" do |node|
+	node.vm.network "private_network", ip: "192.168.56.33"
+	node.vm.hostname = "day3"
+	node.vm.provider "virtualbox" do |vb|
+		vb.memory = "2048"
+				      end
+  			  end
+
+		       end

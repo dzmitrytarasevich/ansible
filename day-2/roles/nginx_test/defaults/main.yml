@@ -1,0 +1,3 @@
+---
+# defaults file for nginx_test
+nginx_http_port: 80

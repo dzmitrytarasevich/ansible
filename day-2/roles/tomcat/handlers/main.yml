@@ -1,0 +1,10 @@
+---
+# handlers file for tomcat
+
+- name: restart tomcat 
+  systemd:
+    daemon-reload: yes
+    name: tomcat
+    state: restarted
+  become: yes
+#  become_method: sudo

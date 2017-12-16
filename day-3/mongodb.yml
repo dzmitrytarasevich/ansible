@@ -1,0 +1,26 @@
+- name: Choose mongodb version
+  hosts: hosts
+  user: vagrant
+  connection: ssh
+  become: true
+  
+  vars:
+    os_family: "{{ ansible_os_family }}"
+    os_version: "7"
+    mongo_version: "3.6.0"
+    mongo_src:
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1404-3.2.12-rc0.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-debian81-3.5.9.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.4.2-rc0.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-debian81-3.5.2.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.6.0.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-debian81-3.6.0.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.6.0.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-rhel62-3.6.0-rc8.tgz
+      - http://downloads.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.2.18.tgz
+
+  tasks:
+ 
+   - name: Mongo link
+     debug:
+       msg: "Mongo link for {{ansible_os_family}}-{{os_version}} and mongodb-{{mongo_version}} is {{mongo_src | get_mongo_src(os_family, os_version, mongo_version)}}"

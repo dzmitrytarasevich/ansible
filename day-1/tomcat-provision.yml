@@ -1,0 +1,116 @@
+---
+- hosts: hosts
+  user: vagrant
+  connection: ssh
+  become: yes
+
+  vars:
+   tomcat_version: 8.5.9
+   http_port: 8080
+   https_port: 8443
+   tomcat_user: tomcat_as
+   tomcat_group: tomcat_as_group
+   java_version: 1.8.0-openjdk
+
+  tasks:
+   - name: -1- Check tomcat.tar.gz exists
+     stat: 
+       path: "/opt/apache-tomcat-{{tomcat_version}}.tar.gz" 
+     register: exist 
+
+   - name: -2- Download Tomcat AS
+     get_url: 
+       url: "http://archive.apache.org/dist/tomcat/tomcat-8/v{{tomcat_version}}/bin/apache-tomcat-{{tomcat_version}}.tar.gz"
+       dest: "/opt/apache-tomcat-{{tomcat_version}}.tar.gz"
+     when: exist.stat.exists == false
+
+   - name: -3- Check /opt/tomcat/ folder exists
+     stat: 
+       path: "/opt/tomcat/{{tomcat_version}}" 
+     register: tomcat
+
+   - name: -4- Create tomcat directory 
+     file: 
+       path: "/opt/tomcat/{{tomcat_version}}"
+       state: directory
+       recurse: yes
+     when: tomcat.stat.exists == false
+ 
+   - name: -5- Check for unpack tar.gz
+     stat: 
+       path: "/opt/tomcat/{{tomcat_version}}/bin"
+     register: arch
+
+   - name: -6- Unpack to /opt/tomcat directory
+     unarchive: 
+       src: "/opt/apache-tomcat-{{tomcat_version}}.tar.gz"
+       dest: "/opt/tomcat/{{tomcat_version}}"
+       remote_src: yes
+       extra_opts: [--strip-components=1]
+     when: arch.stat.exists == false
+
+   - name: -7- Copy tomcat.service file to remote host
+     copy: 
+       src: "/home/student/cm/ansible/day-1/tomcat.service"
+       dest: "/etc/systemd/system/"
+    
+   - name: -8- Install Java 1.8.0
+     yum: 
+       name: java-{{java_version}}
+       state: present
+
+   - name: -9- Add group "tomcat_as_group"
+     group: 
+       name: "{{tomcat_group}}"
+
+   - name: -10- Add user "tomcat_as"
+     user: 
+       name: "{{tomcat_user}}" 
+       group: "{{tomcat_group}}"
+
+   - name: -11- Change ownership of Tomcat installation
+     file: 
+       path: "/opt/tomcat/"
+       owner: "{{tomcat_user}}" 
+       group: "{{tomcat_group}}" 
+       state: directory 
+       recurse: yes
+
+   - name: -12- Start Tomcat
+     service: 
+       name: tomcat 
+       state: started 
+       enabled: yes
+
+   - name: -13- Wait for tomcat to start
+     wait_for: port={{http_port}}
+
+   - name: -14- Check Tomcat is running
+     shell: systemctl status tomcat | grep Active
+     register: tomcat_status
+     changed_when: False
+     failed_when: "'running' not in tomcat_status.stdout"
+
+   - name: -15- Tomcat_status
+     debug:
+       msg: "{{tomcat_status}}"
+
+   - name: -16- Tomcat responce
+     shell: sleep 15 && curl http://127.0.0.1:8080 | grep Tomcat
+     changed_when: False
+     register: tomcat_responce
+     failed_when: "'Tomcat' not in tomcat_responce.stdout"
+
+   - name: -17- Tomcat responce
+     debug:
+       msg: "{{tomcat_responce}}"
+
+   - name: -18- 2nd check Tomcat status
+     shell: ps -ef | grep tomcat
+     register: tomcat_process
+     changed_when: False
+     failed_when: "'catalina' not in tomcat_process.stdout"
+
+   - name: -19- Tomcat status
+     debug:
+       msg: "{{tomcat_process}}"

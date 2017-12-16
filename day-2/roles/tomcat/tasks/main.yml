@@ -1,0 +1,110 @@
+---
+# tasks file for tomcat
+   - name: Tomcat -1- Add group "tomcat_as_group"
+     group:
+       name: "{{tomcat_group}}"
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -2- Add user "tomcat_as"
+     user:
+       name: "{{tomcat_user}}"
+       group: "{{tomcat_group}}"
+       createhome: no
+     become: yes
+#     become_method: sudo
+
+#   - name: Tomcat -1- Check tomcat.tar.gz exists
+#     stat:
+#       path: "/opt/apache-tomcat-{{tomcat_version}}.tar.gz"
+#     register: exist
+
+   - name: Tomcat -3- Download Tomcat AS
+     get_url: 
+#       url: "http://archive.apache.org/dist/tomcat/tomcat-8/v{{tomcat_version}}/bin/apache-tomcat-{{tomcat_version}}.tar.gz"
+       url: "{{tomcat[tomcat_version]}}"
+       dest: /opt/apache-tomcat-{{tomcat_version}}.tar.gz
+#     when: exist.stat.exists == false
+     become: yes
+#     become_method: sudo
+
+#   - name: Tomcat -3- Check /opt/tomcat/ folder exists
+#     stat:
+#       path: "/opt/tomcat/{{tomcat_version}}"
+#     register: tomcat
+
+   - name: Tomcat -4- Create tomcat directory
+     file:
+       path: "/opt/tomcat/{{tomcat_version}}"
+       state: directory
+       owner: "{{tomcat_user}}"
+       group: "{{tomcat_group}}"
+       recurse: yes
+#     when: tomcat.stat.exists == false
+     become: yes
+#     become_method: sudo
+
+#   - name: Tomcat -5- Check for unpack tar.gz
+#     stat:
+#       path: "/opt/tomcat/{{tomcat_version}}/bin"
+#     register: arch
+
+   - name: Tomcat -6- Unpack to /opt/tomcat directory
+     unarchive:
+       src: /opt/apache-tomcat-{{tomcat_version}}.tar.gz
+       dest: "/opt/tomcat/{{tomcat_version}}"
+       remote_src: yes
+       extra_opts: [--strip-components=1]
+#     when: arch.stat.exists == false
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -7- Install tomcat.service in remote host
+#     copy:
+#       src: "/home/student/cm/ansible/day-2/tomcat.service"
+#       dest: "/etc/systemd/system/"
+     template:
+       owner: "{{tomcat_user}}"
+       group: "{{tomcat_group}}"
+       src: tomcat.service
+       dest: /etc/systemd/system/tomcat.service
+     notify:
+     - restart tomcat
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -10- Change ownership of Tomcat installation
+     file:
+       path: "/opt/tomcat/"
+       owner: "{{tomcat_user}}"
+       group: "{{tomcat_group}}"
+       state: directory
+       recurse: yes
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -11- Symlink log directory
+     file:
+       owner: "{{tomcat_user}}"
+       group: "{{tomcat_group}}"
+       src: "{{tomcat_home}}/logs"
+       path: /var/log/tomcat
+       state: link
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -12- Start Tomcat
+#     service:
+#       name: tomcat
+#       state: started
+#       enabled: yes
+     systemd:
+       daemon-reload: yes
+       name: tomcat
+       enabled: yes
+       state: started
+     become: yes
+#     become_method: sudo
+
+   - name: Tomcat -13- Wait for tomcat to start
+     wait_for: port={{http_port}}
